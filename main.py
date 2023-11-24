@@ -48,10 +48,21 @@ def is_absolute_url(url: str) -> bool:
     return url.startswith(("http:", "https:", "ftp:", "ftps:", "sftp:"))
 
 
+def make_absolute_url(url: str, base_url: str) -> str:
+    if url.startswith("/") or not is_absolute_url(url):
+        out = urljoin(base_url, url)
+    else:
+        out = url
+    return out
+
+
 def get_interesting_page_contents(url: str) -> ScrapingResult:
     print(f"Scraping: {url}")
     try:
-        page = requests.get(url)
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+        }
+        page = requests.get(url, headers=headers)
     except:
         return ScrapingResult(
             url=url,
@@ -77,7 +88,7 @@ def get_interesting_page_contents(url: str) -> ScrapingResult:
     out["response_time"] = page.elapsed
 
     # Shortcut on images and stylesheets
-    if url.endswith((".png", "jpg", ".jpeg", ".css")):
+    if url.endswith((".css", ".js", ".png", "jpg", ".jpeg", ".ico", ".svg")):
         return ScrapingResult(
             **out,
             h1=[],
@@ -116,7 +127,8 @@ def get_interesting_page_contents(url: str) -> ScrapingResult:
     css_links = []
     for i in soup.find_all("link", rel="stylesheet"):
         try:
-            css_links.append(i["href"])
+            css_link_i = make_absolute_url(i["href"], base_url=url)
+            css_links.append(css_link_i)
         except:
             pass
     out["css_links"] = css_links
@@ -124,7 +136,8 @@ def get_interesting_page_contents(url: str) -> ScrapingResult:
     script_links = []
     for i in soup.find_all("script", src=re.compile(".*")):
         try:
-            script_links.append(i["src"])
+            script_i = make_absolute_url(i["src"], base_url=url)
+            script_links.append(script_i)
         except:
             pass
     out["script_links"] = script_links
@@ -133,10 +146,8 @@ def get_interesting_page_contents(url: str) -> ScrapingResult:
     for i in images:
         if i.startswith("data:image"):
             pass  # Skip processing embedded images
-        elif is_absolute_url(i):
-            images_url.append(i)
         else:
-            images_url.append(urljoin(url, i))
+            images_url.append(make_absolute_url(i, base_url=url))
     out["images_url"] = list_of_unique_elements(images_url)
 
     xs = soup.find_all("a", href=True)
@@ -147,11 +158,8 @@ def get_interesting_page_contents(url: str) -> ScrapingResult:
         s_i = p["href"]
         if s_i.startswith("mailto:"):
             email_addresses.append(s_i.replace("mailto:", ""))
-        elif is_absolute_url(s_i):
-            external_links.append(s_i)
         else:
-            local_link = urljoin(url, s_i)
-            internal_links.append(local_link)
+            external_links.append(make_absolute_url(s_i, base_url=url))
 
     # Reformatting external links
     current_domain = extract_domain_from_url(url)
@@ -213,7 +221,8 @@ def crawl_website(url: str) -> dict[str, str]:
 
 
 if __name__ == "__main__":
-    target_website = "https://www.pierrevf.consulting"
+    # target_website = "https://dtechtive.com/"
+    target_website = "https://www.pierrevf.consulting/"
     r = crawl_website(target_website)
 
     import pandas as pd
