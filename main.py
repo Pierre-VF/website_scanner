@@ -9,8 +9,7 @@ except:
 if __name__ == "__main__":
     import pandas as pd
 
-    target_website = "https://dtechtive.com/"
-    # target_website = "https://www.pierrevf.consulting/"
+    target_website = "https://www.pierrevf.consulting/"
 
     tls_version = security.get_tls_version(target_website, raise_if_unsafe=True)
     allows_insecure, details = security.allows_insecure_connections(target_website)
@@ -37,4 +36,22 @@ if __name__ == "__main__":
     res["response_time_ms"] = res["res"].apply(
         lambda x: x.response_time / timedelta(milliseconds=1)
     )
+
     print(res)
+
+    print("/ ---------------------------------------------------")
+    print("/ ---------------------------------------------------")
+    df_invalid_internal = res[(res["valid"] == False) & (res["target"] == "INTERNAL")]
+    df_invalid_external = res[(res["valid"] == False) & (res["target"] == "EXTERNAL")]
+    print(f"{len(df_invalid_internal)} invalid internal links:")
+    print(df_invalid_internal)
+    print("URLs:")
+    df_invalid_internal["url"].apply(print)
+    print(" ")
+    print("/ ---------------------------------------------------")
+    print("/ ---------------------------------------------------")
+    print(f"{len(df_invalid_external)} invalid external links:")
+    print(df_invalid_external)
+    print("URLs:")
+    df_invalid_external["url"].apply(print)
+
