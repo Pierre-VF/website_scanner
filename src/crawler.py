@@ -1,5 +1,5 @@
-"""Module implementing the crawler
-"""
+"""Module implementing the crawler"""
+
 import re
 from dataclasses import dataclass
 from datetime import timedelta
@@ -47,8 +47,9 @@ def make_absolute_url(url: str, base_url: str) -> str:
     return out
 
 
-def get_interesting_page_contents(url: str) -> ScrapingResult:
-    print(f"Scraping: {url}")
+def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingResult:
+    if verbose:
+        print(f"Scraping: {url}")
     try:
         headers = headers_faking_navigator()
         page = requests.get(url, headers=headers)
@@ -166,7 +167,7 @@ def get_interesting_page_contents(url: str) -> ScrapingResult:
     return ScrapingResult(**out)
 
 
-def crawl_website(url: str) -> dict[str, str]:
+def crawl_website(url: str, verbose: bool = True) -> dict[str, str]:
     crawled_internal_urls = []
     internal_urls_to_check = [url]
     crawled_external_urls = []
@@ -177,7 +178,7 @@ def crawl_website(url: str) -> dict[str, str]:
     # Crawling internal links
     while len(internal_urls_to_check) > 0:
         url_i = internal_urls_to_check.pop(0)
-        r_i = get_interesting_page_contents(url_i)
+        r_i = get_interesting_page_contents(url_i, verbose=verbose)
         crawled_internal_urls.append(url_i)
         res[url_i] = r_i
         # Adding internal urls
@@ -201,7 +202,7 @@ def crawl_website(url: str) -> dict[str, str]:
     ext_res = dict()
     while len(external_urls_to_check) > 0:
         url_i = external_urls_to_check.pop(0)
-        r_i = get_interesting_page_contents(url_i)
+        r_i = get_interesting_page_contents(url_i, verbose=verbose)
         crawled_external_urls.append(url_i)
         ext_res[url_i] = r_i
     res["external"] = ext_res
