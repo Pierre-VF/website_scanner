@@ -1,5 +1,5 @@
-requests
-beautifulsoup4
-pandas
-typer>=0.12.3
-pre-commit
+requests==2.32.3
+beautifulsoup4==4.12.3
+pandas==2.2.2
+typer==0.12.3
+pre-commit==3.8.0
