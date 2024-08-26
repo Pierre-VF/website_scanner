@@ -1,4 +1,5 @@
-"""Module checking usage of cookies
+"""
+Module checking usage of cookies
 """
 
 import requests
@@ -14,10 +15,3 @@ def page_uses_cookies(url) -> tuple[int, dict]:
     response.raise_for_status()
     cookies_after = session.cookies.get_dict()
     return len(cookies_after), cookies_after
-
-
-if __name__ == "__main__":
-    hostname_using_cookies = "https://www.easyjet.com/"
-    url = "https://www.pierrevf.consulting/"
-    n, details = page_uses_cookies(url)
-    print(n)

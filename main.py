@@ -16,8 +16,10 @@ def check(url: str):
     Checks a website for broken links and configuration issues.
     """
     pp = pprint.PrettyPrinter(indent=4)
-    res = check_target_website(url, verbose=False)
+    pp.pprint(f"==== Checking website: {url} ====")
+    res = check_target_website(url, verbose=True)
     pp.pprint(res)
+    pp.pprint("======== Check completed ========")
 
 
 if __name__ == "__main__":
