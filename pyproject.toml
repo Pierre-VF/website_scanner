@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "Website scanner"
+version = "0.0.0"
+description = "Package to run scans of a website"
+authors = ["Pierre VF"]
+packages = []
+include = [
+    "src"
+]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.12.3"
+pandas = "^2.2.2"
+typer = "^0.12.3"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.2"
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+coverage = "^7.6.1"
+pre-commit = "^3.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
