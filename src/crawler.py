@@ -23,19 +23,20 @@ class ScrapingResult:
     url: str
     RESPONSE_CODE: int
     VALID: bool
-    h1: list[str]
-    h2: list[str]
-    h3: list[str]
-    p: list[str]
-    images: list[str]
-    images_url: list[str]
-    emails: list[str]
-    external_links: list[str]
-    internal_links: list[str]
-    css_links: list[str]
-    script_links: list[str]
+    h1: list[str] = []
+    h2: list[str] = []
+    h3: list[str] = []
+    p: list[str] = []
+    images: list[str] = []
+    images_url: list[str] = []
+    emails: list[str] = []
+    external_links: list[str] = []
+    internal_links: list[str] = []
+    css_links: list[str] = []
+    script_links: list[str] = []
     response_time: timedelta = timedelta(seconds=0)
     text_as_markdown: str | None = None
+    exception: Exception | None = None
 
 
 def is_absolute_url(url: str) -> bool:
@@ -50,28 +51,22 @@ def make_absolute_url(url: str, base_url: str) -> str:
     return out
 
 
-def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingResult:
+def get_interesting_page_contents(
+    url: str,
+    verbose: bool = True,
+    skip_details: bool = False,
+) -> ScrapingResult:
     if verbose:
         print(f"Scraping: {url}")
     try:
         headers = headers_faking_navigator()
         page = requests.get(url, headers=headers)
-    except:
+    except Exception as e:
         return ScrapingResult(
             url=url,
             RESPONSE_CODE=0,
             VALID=False,
-            h1=[],
-            h2=[],
-            h3=[],
-            p=[],
-            images=[],
-            images_url=[],
-            emails=[],
-            external_links=[],
-            internal_links=[],
-            css_links=[],
-            script_links=[],
+            exception=e,
         )
 
     out = {}
@@ -80,21 +75,13 @@ def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingRes
     out["VALID"] = page.status_code == 200
     out["response_time"] = page.elapsed
 
-    # Shortcut on images and stylesheets
-    if url.endswith((".css", ".js", ".png", "jpg", ".jpeg", ".ico", ".svg")):
+    # Shortcut on images and stylesheets - or when details are not of interest
+    if (
+        url.endswith((".css", ".js", ".png", "jpg", ".jpeg", ".ico", ".svg"))
+        or skip_details
+    ):
         return ScrapingResult(
             **out,
-            h1=[],
-            h2=[],
-            h3=[],
-            p=[],
-            images=[],
-            images_url=[],
-            emails=[],
-            external_links=[],
-            internal_links=[],
-            css_links=[],
-            script_links=[],
         )
 
     soup = BeautifulSoup(page.content, "html.parser")
@@ -108,13 +95,13 @@ def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingRes
 
     images = []
     for i in soup.find_all("img"):
-        try:
+        keys_i = list(i.keys())
+        if "src" in keys_i:
             images.append(i["src"])
-        except:
-            try:
-                images.append(i["data-src"])
-            except:
-                pass
+        elif "data-src" in keys_i:
+            images.append(i["data-src"])
+        else:
+            pass
     out["images"] = images
 
     css_links = []
@@ -122,7 +109,7 @@ def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingRes
         try:
             css_link_i = make_absolute_url(i["href"], base_url=url)
             css_links.append(css_link_i)
-        except:
+        except KeyError:
             pass
     out["css_links"] = css_links
 
@@ -131,7 +118,7 @@ def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingRes
         try:
             script_i = make_absolute_url(i["src"], base_url=url)
             script_links.append(script_i)
-        except:
+        except KeyError:
             pass
     out["script_links"] = script_links
 
@@ -183,7 +170,7 @@ def crawl_website(url: str, verbose: bool = True) -> dict[str, str]:
     # Crawling internal links
     while len(internal_urls_to_check) > 0:
         url_i = internal_urls_to_check.pop(0)
-        r_i = get_interesting_page_contents(url_i, verbose=verbose)
+        r_i = get_interesting_page_contents(url_i, verbose=verbose, skip_details=False)
         crawled_internal_urls.append(url_i)
         res[url_i] = r_i
         # Adding internal urls
@@ -207,7 +194,7 @@ def crawl_website(url: str, verbose: bool = True) -> dict[str, str]:
     ext_res = dict()
     while len(external_urls_to_check) > 0:
         url_i = external_urls_to_check.pop(0)
-        r_i = get_interesting_page_contents(url_i, verbose=verbose)
+        r_i = get_interesting_page_contents(url_i, verbose=verbose, skip_details=True)
         crawled_external_urls.append(url_i)
         ext_res[url_i] = r_i
     res["external"] = ext_res
