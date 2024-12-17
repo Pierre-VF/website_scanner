@@ -1,7 +1,7 @@
 """Module implementing the crawler"""
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from urllib.parse import urljoin
 
@@ -23,17 +23,17 @@ class ScrapingResult:
     url: str
     RESPONSE_CODE: int
     VALID: bool
-    h1: list[str] = []
-    h2: list[str] = []
-    h3: list[str] = []
-    p: list[str] = []
-    images: list[str] = []
-    images_url: list[str] = []
-    emails: list[str] = []
-    external_links: list[str] = []
-    internal_links: list[str] = []
-    css_links: list[str] = []
-    script_links: list[str] = []
+    h1: list[str] = field(default_factory=list)
+    h2: list[str] = field(default_factory=list)
+    h3: list[str] = field(default_factory=list)
+    p: list[str] = field(default_factory=list)
+    images: list[str] = field(default_factory=list)
+    images_url: list[str] = field(default_factory=list)
+    emails: list[str] = field(default_factory=list)
+    external_links: list[str] = field(default_factory=list)
+    internal_links: list[str] = field(default_factory=list)
+    css_links: list[str] = field(default_factory=list)
+    script_links: list[str] = field(default_factory=list)
     response_time: timedelta = timedelta(seconds=0)
     text_as_markdown: str | None = None
     exception: Exception | None = None
@@ -95,13 +95,13 @@ def get_interesting_page_contents(
 
     images = []
     for i in soup.find_all("img"):
-        keys_i = list(i.keys())
-        if "src" in keys_i:
+        try:
             images.append(i["src"])
-        elif "data-src" in keys_i:
-            images.append(i["data-src"])
-        else:
-            pass
+        except KeyError:
+            try:
+                images.append(i["data-src"])
+            except KeyError:
+                pass
     out["images"] = images
 
     css_links = []
