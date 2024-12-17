@@ -2,10 +2,7 @@ import pprint
 
 import typer
 
-try:
-    from src.runner import check_target_website
-except ImportError:
-    pass
+from pvfs_website_scanner.runner import check_target_website
 
 app = typer.Typer()
 
@@ -23,4 +20,4 @@ def check(url: str):
 
 
 if __name__ == "__main__":
-    app()
+    check(url="https://pierrevf.consulting/")

@@ -3,11 +3,10 @@ name = "Website scanner"
 version = "0.0.0"
 description = "Package to run scans of a website"
 authors = ["Pierre VF"]
-packages = []
-include = [
-    "src"
+packages = [
+    {include = "pvfs_website_scanner", from = "src"},
 ]
-package-mode = false
+package-mode = true
 
 [tool.poetry.dependencies]
 python = "^3.12"

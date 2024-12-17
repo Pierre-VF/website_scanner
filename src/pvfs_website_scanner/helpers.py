@@ -41,14 +41,12 @@ def minimal_url(x: str) -> str:
 
 
 def html_to_markdown(x: str, clean: bool = True, remove_images: bool = True) -> str:
-    out = markdownify(x)
+    if remove_images:
+        kwargs = dict(strip=["img"])
+    else:
+        kwargs = dict()
+    out = markdownify(x, **kwargs)
 
     if clean:
         out = re.sub("(\\n){2,}", "\n\n", out)
-    if remove_images:
-        out = re.sub(
-            "!\[[^(\[\])]*\]\([^(\[\])]*\)",
-            "[image]",
-            re.sub("(\\n){2,}", "\n\n", out),
-        )
     return out
