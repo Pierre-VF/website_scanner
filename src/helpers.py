@@ -1,8 +1,11 @@
 """
 Module with helper functions
 """
+
 import re
 from urllib.parse import urlparse
+
+from markdownify import markdownify
 
 
 def list_of_unique_elements(x: list) -> list:
@@ -26,3 +29,26 @@ def headers_faking_navigator() -> dict[str, str]:
         "User-Agent": "Mozilla/5.0",
     }
     return headers
+
+
+def minimal_url(x: str) -> str:
+    parsed_url = urlparse(x)
+
+    out = f"{parsed_url.scheme}://{parsed_url.hostname}{parsed_url.path}"
+    # if out.endswith("/"):
+    #    out = out[:-1]
+    return out
+
+
+def html_to_markdown(x: str, clean: bool = True, remove_images: bool = True) -> str:
+    out = markdownify(x)
+
+    if clean:
+        out = re.sub("(\\n){2,}", "\n\n", out)
+    if remove_images:
+        out = re.sub(
+            "!\[[^(\[\])]*\]\([^(\[\])]*\)",
+            "[image]",
+            re.sub("(\\n){2,}", "\n\n", out),
+        )
+    return out

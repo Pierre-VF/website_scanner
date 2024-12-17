@@ -11,7 +11,9 @@ from bs4 import BeautifulSoup
 from .helpers import (
     extract_domain_from_url,
     headers_faking_navigator,
+    html_to_markdown,
     list_of_unique_elements,
+    minimal_url,
     sentence_from_element,
 )
 
@@ -33,6 +35,7 @@ class ScrapingResult:
     css_links: list[str]
     script_links: list[str]
     response_time: timedelta = timedelta(seconds=0)
+    text_as_markdown: str | None = None
 
 
 def is_absolute_url(url: str) -> bool:
@@ -156,14 +159,16 @@ def get_interesting_page_contents(url: str, verbose: bool = True) -> ScrapingRes
     real_external_links = []
     real_internal_links = []
     for i in list_of_unique_elements(internal_links + external_links):
-        if current_domain in i:
-            real_internal_links.append(i)
+        minimal_i = minimal_url(i)
+        if current_domain in minimal_i:
+            real_internal_links.append(minimal_i)
         else:
-            real_external_links.append(i)
+            real_external_links.append(minimal_i)
 
     out["emails"] = list_of_unique_elements(email_addresses)
     out["external_links"] = real_external_links
     out["internal_links"] = real_internal_links
+    out["text_as_markdown"] = html_to_markdown(page.text)
     return ScrapingResult(**out)
 
 
